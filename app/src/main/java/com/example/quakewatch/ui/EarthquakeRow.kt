@@ -2,6 +2,7 @@
 package com.example.quakewatch.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,8 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.quakewatch.domain.model.Earthquake
 import com.example.quakewatch.ui.util.formatMillis
-import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.quakewatch.ui.util.formatRelative
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 private fun MagnitudeChip(mag: Double?, modifier: Modifier = Modifier) {
@@ -49,8 +50,18 @@ private fun MagnitudeChip(mag: Double?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EarthquakeRow(eq: Earthquake, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(16.dp)) {
+fun EarthquakeRow(
+    eq: Earthquake,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
+    val rowModifier = if (onClick != null) {
+        modifier.clickable(onClick = onClick)
+    } else {
+        modifier
+    }
+
+    Column(modifier = rowModifier.padding(16.dp)) {
         Row {
             MagnitudeChip(eq.mag)
             Spacer(Modifier.width(12.dp))

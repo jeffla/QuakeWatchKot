@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/quakewatch/ui/UsgsViewModel.kt
 package com.example.quakewatch.ui
 
 import androidx.lifecycle.ViewModel
@@ -24,6 +25,9 @@ class UsgsViewModel @Inject constructor(
     private val _state = MutableStateFlow<UiState>(UiState.Loading)
     val state: StateFlow<UiState> = _state
 
+    private val _selected = MutableStateFlow<Earthquake?>(null)
+    val selected: StateFlow<Earthquake?> = _selected
+
     init {
         refresh()
     }
@@ -38,5 +42,13 @@ class UsgsViewModel @Inject constructor(
                 _state.value = UiState.Error(t.message ?: "Unknown error")
             }
         }
+    }
+
+    fun select(eq: Earthquake) {
+        _selected.value = eq
+    }
+
+    fun clearSelection() {
+        _selected.value = null
     }
 }

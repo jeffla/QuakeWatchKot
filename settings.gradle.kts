@@ -1,28 +1,21 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
-        maven { url = uri("https://repo1.maven.org/maven2") }
-        maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2") }
-        mavenCentral()
+        google()
+        // Mirrors for Maven Central (network-friendly)
+        maven("https://maven-central.storage-download.googleapis.com/maven2/")
+        maven("https://repo1.maven.org/maven2/")
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
-    //repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
-        // Mirrors / fallbacks:
-        maven { url = uri("https://repo1.maven.org/maven2") }
-        maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2") }
-        mavenCentral()
+        // Same mirrors here
+        maven("https://maven-central.storage-download.googleapis.com/maven2/")
+        maven("https://repo1.maven.org/maven2/")
     }
 }
-
-rootProject.name = "QuakeWatch"
+rootProject.name = "QuakeWatchKot"
 include(":app")

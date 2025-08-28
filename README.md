@@ -181,6 +181,180 @@ UsgsViewModel (StateFlow<UiState>)  <-- Hilt injects QuakeRepository
 
 ---
 
+## 🧪 Unit Tests (JVM only)
+
+This project includes a compact, production-style unit test setup for a Kotlin/Compose/Hilt/Retrofit app, designed to run fast **without** an emulator or Robolectric.
+
+---
+
+## 1) Requirements
+
+- **JDK 17** (required by the Android Gradle Plugin)
+- **Gradle wrapper**: use `./gradlew` (do not install Gradle globally)
+
+```bash
+# macOS example
+export JAVA_HOME="$("/usr/libexec/java_home" -v 17)"
+```
+
+---
+
+## 2) Run all unit tests
+
+```bash
+./gradlew test
+```
+
+- HTML report: **app/build/reports/tests/testDebugUnitTest/index.html**
+- These are **local unit tests** under `app/src/test` (pure JVM; no instrumentation).
+
+---
+
+## 3) Fast feedback recipes
+
+```bash
+# run only debug unit tests
+./gradlew testDebugUnitTest
+
+# re-run on changes (watch mode)
+./gradlew test --continuous
+
+# run a single class
+./gradlew test --tests "*UsgsViewModelTest"
+
+# run a single method
+./gradlew test --tests "*UsgsViewModelTest.refresh_firstLoad_emits_Loading_then_Success_emptyList"
+
+# add logs
+./gradlew test -i --stacktrace
+```
+
+---
+
+## 4) Project test layout
+
+```
+app/
+  src/
+    test/
+      java/
+        com/example/quakewatch/
+          json/                # Moshi parsing tests
+          repo/                # Repository + MockWebServer tests
+          ui/util/             # Pure JVM utilities (time formatting)
+          vm/                  # ViewModel + Turbine tests
+          testing/             # Test infra (MainDispatcherRule, etc.)
+      resources/
+        fixtures/
+          usgs_one_quake.json  # Realistic USGS GeoJSON sample
+```
+
+---
+
+## 5) Test stack
+
+Already included via `app/build.gradle.kts`:
+- **JUnit 4** + **Truth**
+- **kotlinx-coroutines-test** (+ `MainDispatcherRule`)
+- **Turbine** for `StateFlow` assertions
+- **MockWebServer** (+ Retrofit + Moshi)
+- **MockK** for repository/ViewModel mocking
+- **Moshi (reflection)** for tests → **no kapt/codegen** needed
+
+Additions you should see in `dependencies { }`:
+
+```kotlin
+testImplementation("junit:junit:4.13.2")
+testImplementation("com.google.truth:truth:1.4.4")
+testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+testImplementation("app.cash.turbine:turbine:1.0.0")
+testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+testImplementation("io.mockk:mockk:1.13.12")
+
+// Moshi (reflection) – avoids kapt in tests
+testImplementation("com.squareup.moshi:moshi:1.15.1")
+testImplementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+```
+
+And in `android { }`:
+
+```kotlin
+testOptions {
+    unitTests.isReturnDefaultValues = true
+}
+```
+
+---
+
+## 6) What’s covered
+
+- **Moshi parsing** of a real USGS GeoJSON fixture
+- **Repository** test: Retrofit ↔ Moshi ↔ MockWebServer → domain mapping assertions
+- **ViewModel** tests:
+  - first-load **Loading → Success**
+  - **Loading → Error** path
+  - **Refresh** tolerance (either `Loading → Success` or `Success(refreshing=true) → Success(refreshing=false)`)
+- **Utility** tests (time formatting) – deterministic with pinned timezone
+
+---
+
+## 7) Common gotchas
+
+- **“Fixture not found”**: ensure files live under `app/src/test/resources/...` and are read via the classloader.
+- **Timezone drift**: tests that format dates pin default TZ to UTC in `@Before`, restore in `@After`.
+- **`ExperimentalCoroutinesApi` warnings**: `@OptIn(ExperimentalCoroutinesApi::class)` is applied in `MainDispatcherRule`.
+- **Hilt/kapt warnings** in unit tests: safe to ignore for plain JVM tests—we do not run Robolectric here.
+- **MockWebServer port conflicts**: rare; if you hit one, re-run. Tests call `server.shutdown()` in `@After`.
+
+---
+
+## 8) Minimal CI (GitHub Actions)
+
+Create **.github/workflows/tests.yml**:
+
+```yaml
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: 'gradle'
+      - name: Run unit tests
+        run: ./gradlew test --no-daemon
+      - name: Archive HTML test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: app/build/reports/tests/testDebugUnitTest
+```
+
+---
+
+## 9) Quick smoke
+
+```bash
+# everything
+./gradlew clean test
+
+# only repo + VM tests
+./gradlew test --tests "*QuakeRepositoryImplTest" --tests "*UsgsViewModelTest"
+```
+
+That’s it—set `JAVA_HOME` to 17, `./gradlew test`, and open the HTML report.
+
+---
+
 ## Common Troubleshooting
 
 - **“defaultConfig contains custom BuildConfig fields, but the feature is disabled.”**

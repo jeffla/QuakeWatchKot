@@ -39,6 +39,7 @@ dependencies {
     // AndroidX
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.compose.foundation:foundation")
 
     // Compose (use BOM to keep versions aligned)
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))

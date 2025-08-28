@@ -25,7 +25,13 @@ class QuakeRepositoryImpl @Inject constructor(
                 timeMillis = f.properties.time ?: 0L,
                 lat = f.geometry?.coordinates?.getOrNull(1) ?: 0.0,
                 lon = f.geometry?.coordinates?.getOrNull(0) ?: 0.0,
-                depthKm = f.geometry?.coordinates?.getOrNull(2) ?: 0.0
+                depthKm = f.geometry?.coordinates?.getOrNull(2) ?: 0.0,
+                alert = f.properties.alert,
+                tsunami = (f.properties.tsunami ?: 0) == 1,
+                cdi = f.properties.cdi,
+                mmi = f.properties.mmi,
+                felt = f.properties.felt,
+                significance = f.properties.sig
             )
         }
     }

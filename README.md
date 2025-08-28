@@ -35,12 +35,13 @@ A tiny, modern Android app that lists recent earthquakes from the **USGS Earthqu
 
 ---
 
-## Screens (concept)
+---
 
-- Main list with chips, filters in app bar, pull-to-refresh
-- Detail screen with chips + map + actions
+## Screenshots
 
-*(Add screenshots later if you want; e.g. `docs/`)*
+![List screen](./docs/list.png)
+![Detail screen](./docs/detail.png)
+
 
 ---
 

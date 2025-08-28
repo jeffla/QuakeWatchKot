@@ -16,6 +16,10 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        val mapsKey: String = providers.gradleProperty("MAPS_API_KEY").orNull ?: ""
+        resValue("string", "google_maps_key", mapsKey)
+        val contactEmail: String = providers.gradleProperty("CONTACT_EMAIL").orNull ?: ""
+        buildConfigField("String", "CONTACT_EMAIL", "\"$contactEmail\"")
     }
 
     // Make Java + Kotlin both target 17
@@ -31,7 +35,10 @@ android {
     }
 
     // Turn on Compose
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     composeOptions { kotlinCompilerExtensionVersion = "1.7.3" }
 }
 
@@ -40,6 +47,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.compose.foundation:foundation")
+    implementation("com.google.maps.android:maps-compose:6.7.2")
 
     // Compose (use BOM to keep versions aligned)
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))

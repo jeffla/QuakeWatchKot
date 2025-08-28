@@ -6,6 +6,8 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -136,7 +138,12 @@ fun EarthquakeDetailScreen(
             eq.significance?.let { Text("Significance: $it", style = MaterialTheme.typography.bodyMedium) }
         }
 
+        Spacer(Modifier.height(12.dp))
+        EarthquakeMap(eq = eq)
         Spacer(Modifier.height(16.dp))
+
+        Spacer(Modifier.height(16.dp))
+
         Row {
             Button(
                 onClick = {

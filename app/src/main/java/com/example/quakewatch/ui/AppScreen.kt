@@ -42,15 +42,17 @@ fun AppScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val selected by viewModel.selected.collectAsState()
-    val refreshing = state is UiState.Loading
 
-    // Local (in-memory) min-mag filter; shown only on the list screen
-    val (minMag, setMinMag) = remember { mutableStateOf<Double?>(null) }
+    // New: only show the pull-to-refresh spinner when Success.refreshing == true
+    val isRefreshing = (state as? UiState.Success)?.refreshing == true
+
+    // Local (in-memory) list controls
+    val (minMag, setMinMag) = remember { mutableStateOf<Double?>(null) }   // null = All
+    val (sortByMag, setSortByMag) = remember { mutableStateOf(false) }     // false = sort by time
 
     Scaffold(
         topBar = {
-            // Tiny shadow/elevation under the app bar
-            Surface(shadowElevation = 3.dp, tonalElevation = 3.dp) {
+            Surface(shadowElevation = 2.dp, tonalElevation = 2.dp) {
                 TopAppBar(
                     title = {
                         Column {
@@ -59,7 +61,9 @@ fun AppScreen(
                                 Spacer(Modifier.height(4.dp))
                                 FiltersRow(
                                     minMag = minMag,
-                                    onSelect = setMinMag
+                                    onSelect = setMinMag,
+                                    sortByMag = sortByMag,
+                                    onToggleSort = { setSortByMag(!sortByMag) }
                                 )
                             }
                         }
@@ -73,7 +77,10 @@ fun AppScreen(
                     },
                     actions = {
                         if (selected == null) {
-                            IconButton(onClick = { viewModel.refresh() }) {
+                            IconButton(
+                                onClick = { viewModel.refresh() },
+                                enabled = !isRefreshing // disable button while refreshing
+                            ) {
                                 Icon(imageVector = Icons.Filled.Refresh, contentDescription = "Refresh")
                             }
                         }
@@ -83,7 +90,7 @@ fun AppScreen(
         }
     ) { innerPadding ->
         PullToRefreshBox(
-            isRefreshing = refreshing && selected == null,
+            isRefreshing = isRefreshing && selected == null,
             onRefresh = { viewModel.refresh() },
             modifier = Modifier
                 .padding(innerPadding)
@@ -101,20 +108,25 @@ fun AppScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Error: $msg")
                         Spacer(Modifier.height(8.dp))
-                        Button(onClick = { viewModel.refresh() }) {
+                        Button(onClick = { viewModel.refresh(firstLoad = true) }) {
                             Text("Retry")
                         }
                     }
                 }
                 state is UiState.Success -> {
                     val quakes = (state as UiState.Success).quakes
-                    val shown = quakes.filter { (it.mag ?: 0.0) >= (minMag ?: 0.0) }
+                    val filtered = quakes.filter { (it.mag ?: 0.0) >= (minMag ?: 0.0) }
+                    val displayed = if (sortByMag) {
+                        filtered.sortedByDescending { it.mag ?: Double.NEGATIVE_INFINITY }
+                    } else {
+                        filtered.sortedByDescending { it.timeMillis }
+                    }
 
-                    if (shown.isEmpty()) {
+                    if (displayed.isEmpty()) {
                         Text("No recent earthquakes found.", modifier = Modifier.padding(16.dp))
                     } else {
                         LazyColumn {
-                            items(shown, key = { it.id }) { eq ->
+                            items(displayed, key = { it.id }) { eq ->
                                 EarthquakeRow(eq = eq, onClick = { viewModel.select(eq) })
                             }
                         }
@@ -129,6 +141,8 @@ fun AppScreen(
 private fun FiltersRow(
     minMag: Double?,
     onSelect: (Double?) -> Unit,
+    sortByMag: Boolean,
+    onToggleSort: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -159,6 +173,15 @@ private fun FiltersRow(
             selected = (minMag == 5.0),
             onClick = { onSelect(5.0) },
             label = { Text("5+") },
+            colors = colors
+        )
+
+        Spacer(Modifier.width(8.dp))
+
+        FilterChip(
+            selected = sortByMag,
+            onClick = onToggleSort,
+            label = { Text(if (sortByMag) "Sort: Mag" else "Sort: Time") },
             colors = colors
         )
     }
